@@ -1,3 +1,4 @@
+# Encabezado del archivo
 import os
 import feedparser
 import telegram
@@ -10,30 +11,48 @@ from bs4 import BeautifulSoup
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
 
-# Lista en memoria para guardar artículos enviados
 saved_articles = set()
 
 RSS_FEEDS = [
+    'https://vandal.elespanol.com/rss/',
+    'https://www.3djuegos.com/rss/',
+    'https://www.hobbyconsolas.com/categoria/novedades/rss',
+    'https://www.vidaextra.com/feed',
+    'https://es.ign.com/rss',
     'https://www.nintenderos.com/feed',
+    'https://as.com/meristation/portada/rss.xml',
+    'https://blog.es.playstation.com/feed/',
     'https://www.nintendo.com/es/news/rss.xml',
+    'https://news.xbox.com/es-mx/feed/',
     'https://nintenduo.com/category/noticias/feed/',
     'https://www.xataka.com/tag/nintendo/rss',
+    'https://www.eurogamer.es/rss',
+    'https://www.xataka.com/tag/playstation/rss',
+    'https://www.laps4.com/feed/',
+    'https://www.gamereactor.es/rss/rss.php?texttype=1',
+    'https://areajugones.sport.es/feed/',
+]
+
+PALABRAS_CLAVE_NINTENDO = [
+    "nintendo", "switch", "switch 2", "nintendo switch", "zelda", "link", "mario",
+    "super mario", "luigi", "peach", "yoshi", "bowser", "donkey kong", "metroid",
+    "samus", "kirby", "smash", "smash bros", "joy-con", "pokemon", "pikachu",
+    "game freak", "animal crossing", "new horizons", "splatoon", "bayonetta",
+    "mii", "amiibo", "mario kart", "hyrule", "nintendogs", "ds", "3ds", "wii", "wii u",
+    "eshop", "super smash bros", "nintendo direct", "pokemon presents",
+    "paper mario", "nintendo labo", "switch oled", "switch lite"
 ]
 
 async def send_news(context, entry):
-    # Filtrar noticias recientes (últimas 3 horas)
     if hasattr(entry, 'published_parsed'):
         published = datetime(*entry.published_parsed[:6])
         if datetime.now() - published > timedelta(hours=3):
             return
 
-    # Filtrar SOLO noticias relacionadas con Nintendo
     title_lower = entry.title.lower()
     summary_lower = (entry.summary if hasattr(entry, 'summary') else "").lower()
 
-    if not any(palabra in title_lower or palabra in summary_lower for palabra in [
-        "nintendo", "switch", "zelda", "mario", "pokemon", "metroid", "kirby", "joy-con", "nintendogs", "smash bros"
-    ]):
+    if not any(p in title_lower or p in summary_lower for p in PALABRAS_CLAVE_NINTENDO):
         return
 
     if entry.link in saved_articles:
@@ -60,9 +79,22 @@ async def send_news(context, entry):
             if og_image and og_image.get('content'):
                 photo_url = og_image.get('content')
         except Exception as e:
-            print(f"Error obteniendo imagen por scraping: {e}")
+            print(f"Error obteniendo imagen: {e}")
 
-    caption = f"🍄 *NINTENDO NEWS*\n\n*{entry.title}*\n\n#Nintendo"
+if any(k in title_lower for k in ["direct", "evento", "presentación", "showcase"]):
+    tipo = "🎬 *EVENTO NINTENDO*"
+elif any(k in title_lower for k in ["tráiler", "trailer", "avance", "gameplay"]):
+    tipo = "🎥 *TRÁILER DE NINTENDO*"
+elif any(k in title_lower for k in ["review", "análisis", "reseña", "comparativa"]):
+    tipo = "📝 *REVIEW NINTENDO*"
+elif any(k in title_lower for k in ["rebaja", "oferta", "descuento", "promoción"]):
+    tipo = "💸 *OFERTA NINTENDO*"
+elif any(k in title_lower for k in ["lanzamiento", "llega", "disponible", "estrena"]):
+    tipo = "🎮 *LANZAMIENTO NINTENDO*"
+else:
+    tipo = "🍄 *NOTICIA NINTENDO*"
+
+caption = f"{tipo}\n\n*{entry.title}*\n\n#Nintendo"
     button = InlineKeyboardMarkup([[InlineKeyboardButton("📰 Leer noticia completa", url=entry.link)]])
 
     try:
@@ -94,9 +126,8 @@ async def check_feeds(context):
 
 def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
-    job_queue = application.job_queue
-    job_queue.run_repeating(check_feeds, interval=600, first=10)
-    print("Bot Nintendo iniciado sin base de datos.")
+    application.job_queue.run_repeating(check_feeds, interval=600, first=10)
+    print("Bot Nintendo listo y filtrando noticias correctamente.")
     application.run_polling()
 
 if __name__ == "__main__":
