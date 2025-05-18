@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_USERNAME = -1001234567890  # Reemplaza con tu chat_id real
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
 
 # Lista en memoria para guardar artículos enviados
 saved_articles = set()
