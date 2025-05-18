@@ -81,20 +81,20 @@ async def send_news(context, entry):
         except Exception as e:
             print(f"Error obteniendo imagen: {e}")
 
-if any(k in title_lower for k in ["direct", "evento", "presentación", "showcase"]):
-    tipo = "🎬 *EVENTO NINTENDO*"
-elif any(k in title_lower for k in ["tráiler", "trailer", "avance", "gameplay"]):
-    tipo = "🎥 *TRÁILER DE NINTENDO*"
-elif any(k in title_lower for k in ["review", "análisis", "reseña", "comparativa"]):
-    tipo = "📝 *REVIEW NINTENDO*"
-elif any(k in title_lower for k in ["rebaja", "oferta", "descuento", "promoción"]):
-    tipo = "💸 *OFERTA NINTENDO*"
-elif any(k in title_lower for k in ["lanzamiento", "llega", "disponible", "estrena"]):
-    tipo = "🎮 *LANZAMIENTO NINTENDO*"
-else:
-    tipo = "🍄 *NOTICIA NINTENDO*"
+    if any(k in title_lower for k in ["direct", "evento", "presentación", "showcase"]):
+        tipo = "🎬 *EVENTO NINTENDO*"
+    elif any(k in title_lower for k in ["tráiler", "trailer", "avance", "gameplay"]):
+        tipo = "🎥 *TRÁILER DE NINTENDO*"
+    elif any(k in title_lower for k in ["review", "análisis", "reseña", "comparativa"]):
+        tipo = "📝 *REVIEW NINTENDO*"
+    elif any(k in title_lower for k in ["rebaja", "oferta", "descuento", "promoción"]):
+        tipo = "💸 *OFERTA NINTENDO*"
+    elif any(k in title_lower for k in ["lanzamiento", "llega", "disponible", "estrena"]):
+        tipo = "🎮 *LANZAMIENTO NINTENDO*"
+    else:
+        tipo = "🍄 *NOTICIA NINTENDO*"
 
-caption = f"{tipo}\n\n*{entry.title}*\n\n#Nintendo"
+    caption = f"{tipo}\n\n*{entry.title}*\n\n#Nintendo"
     button = InlineKeyboardMarkup([[InlineKeyboardButton("📰 Leer noticia completa", url=entry.link)]])
 
     try:
