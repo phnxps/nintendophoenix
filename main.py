@@ -111,7 +111,6 @@ async def send_news(context, entry):
     else:
         tipo = "🍄 *NOTICIA NINTENDO*"
 
-    caption = f"{tipo}\n\n*{entry.title}*\n\n#Nintendo"
     button = InlineKeyboardMarkup([[InlineKeyboardButton("📰 Leer noticia completa", url=entry.link)]])
 
     try:
