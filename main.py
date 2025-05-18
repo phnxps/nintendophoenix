@@ -1,17 +1,17 @@
-from sent_articles import init_db, save_article, is_article_saved, get_all_articles
 import os
 import feedparser
 import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
+CHANNEL_USERNAME = -1001234567890  # Reemplaza con tu chat_id real
 
-init_db()
+# Lista en memoria para guardar artículos enviados
+saved_articles = set()
 
 RSS_FEEDS = [
     'https://www.nintenderos.com/feed',
@@ -34,6 +34,9 @@ async def send_news(context, entry):
     if not any(palabra in title_lower or palabra in summary_lower for palabra in [
         "nintendo", "switch", "zelda", "mario", "pokemon", "metroid", "kirby", "joy-con", "nintendogs", "smash bros"
     ]):
+        return
+
+    if entry.link in saved_articles:
         return
 
     link = entry.link
@@ -79,11 +82,7 @@ async def send_news(context, entry):
                 disable_web_page_preview=False,
                 reply_markup=button
             )
-        if hasattr(entry, 'published_parsed'):
-            published = datetime(*entry.published_parsed[:6])
-        else:
-            published = datetime.now()
-        save_article(entry.link, published)
+        saved_articles.add(entry.link)
     except Exception as e:
         print(f"Error al enviar noticia: {e}")
 
@@ -91,15 +90,13 @@ async def check_feeds(context):
     for feed_url in RSS_FEEDS:
         feed = feedparser.parse(feed_url)
         for entry in feed.entries:
-            if is_article_saved(entry.link):
-                continue
             await send_news(context, entry)
 
 def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     job_queue = application.job_queue
     job_queue.run_repeating(check_feeds, interval=600, first=10)
-    print("Bot Nintendo iniciado correctamente.")
+    print("Bot Nintendo iniciado sin base de datos.")
     application.run_polling()
 
 if __name__ == "__main__":
